@@ -31,6 +31,42 @@ export const createSkillPost = async (req, res) => {
 };
 
 export const getAllSkills = async (req, res) => {
-  const skills = await SkillPost.find().populate("mentor", "name role");
-  res.json(skills);
+  try {
+    const { search, tag, availability, page = 1, limit = 6 } = req.query;
+
+    const query = {};
+
+    // Search by title
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    // Filter by tag
+    if (tag) {
+      query.tags = { $in: [tag] };
+    }
+
+    // Filter by availability
+    if (availability) {
+      query.availability = availability;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const skills = await SkillPost.find(query)
+      .populate("mentor", "name role")
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await SkillPost.countDocuments(query);
+
+    res.json({
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      skills,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

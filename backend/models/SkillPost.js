@@ -4,7 +4,7 @@ const skillPostSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   tags: [String],
-  availability: String,
+  availability: {type : String},
   image: {
     public_id: String,
     url: String,
