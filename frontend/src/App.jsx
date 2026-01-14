@@ -5,6 +5,8 @@ import Skills from "./pages/Skills";
 import CreateSkill from "./pages/CreateSkill";
 import SkillDetail from "./pages/SkillDetail";
 import MentorRequests from "./pages/MentorRequests";
+import LearnerRequests from "./pages/LearnerRequests";
+
 
 
 
@@ -18,6 +20,7 @@ function App() {
         <Route path="/create-skill" element={<CreateSkill />} />
         <Route path="/skills/:id" element={<SkillDetail />} />
         <Route path="/mentor/requests" element={<MentorRequests />} />
+        <Route path="/learner/requests" element={<LearnerRequests />} />
       </Routes>
     </BrowserRouter>
   );
