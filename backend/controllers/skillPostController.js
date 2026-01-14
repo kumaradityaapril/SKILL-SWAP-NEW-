@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 import SkillPost from "../models/SkillPost.js";
 import cloudinary from "../config/cloudinary.js";
 
@@ -70,3 +72,27 @@ export const getAllSkills = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+export const getSkillById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ✅ Prevent invalid ObjectId crash
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid skill ID" });
+    }
+
+    const skill = await SkillPost.findById(id)
+      .populate("mentor", "name email role");
+
+    if (!skill) {
+      return res.status(404).json({ message: "Skill not found" });
+    }
+
+    res.json(skill);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

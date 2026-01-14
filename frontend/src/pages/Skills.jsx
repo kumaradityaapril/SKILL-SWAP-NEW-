@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Skills = () => {
   const [skills, setSkills] = useState([]);
@@ -8,6 +9,8 @@ const Skills = () => {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [availability, setAvailability] = useState("");
+ 
+  const navigate = useNavigate();
 
 
   const limit = 6;
@@ -88,10 +91,12 @@ const Skills = () => {
           {skills.map((skill) => (
             <div
               key={skill._id}
+              onClick={() => navigate(`/skills/${skill._id}`)}
               style={{
                 border: "1px solid #ddd",
                 padding: "15px",
                 borderRadius: "6px",
+                cursor: "pointer",
               }}
             >
               <img

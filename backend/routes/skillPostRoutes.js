@@ -6,6 +6,8 @@ import {
   createSkillPost,
   getAllSkills,
 } from "../controllers/skillPostController.js";
+import { getSkillById } from "../controllers/skillPostController.js";
+
 
 const router = express.Router();
 
@@ -18,5 +20,7 @@ router.post(
 );
 
 router.get("/", getAllSkills);
+router.get("/:id", getSkillById);
+
 
 export default router;
