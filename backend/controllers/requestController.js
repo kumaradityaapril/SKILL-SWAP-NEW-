@@ -60,3 +60,46 @@ export const getMentorRequests = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const updateRequestStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { id } = req.params;
+
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const request = await Request.findById(id);
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Ensure only mentor can update their requests
+    if (request.mentor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    request.status = status;
+    await request.save();
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const getLearnerRequests = async (req, res) => {
+  try {
+    const requests = await Request.find({ learner: req.user._id })
+      .populate("skill", "title")
+      .populate("mentor", "name email");
+
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
