@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import Peer from "simple-peer";
+import SimplePeer from "simple-peer";
 import api from "../services/api";
 
 const VideoSession = () => {
@@ -23,10 +23,26 @@ const VideoSession = () => {
   const userStream = useRef();
 
   useEffect(() => {
+    // Check if session was already ended
+    const sessionEnded = localStorage.getItem(`session_ended_${roomId}`);
+    if (sessionEnded === 'true') {
+      alert("This session has already ended. You cannot rejoin.");
+      navigate("/");
+      return;
+    }
+
     // Fetch session details
     const fetchSession = async () => {
       try {
         const res = await api.get(`/sessions/room/${roomId}`);
+        
+        // Check if session is already completed
+        if (res.data.status === 'completed') {
+          alert("This session has already been completed.");
+          navigate("/");
+          return;
+        }
+        
         setSession(res.data);
         setLoading(false);
       } catch (error) {
@@ -41,40 +57,63 @@ const VideoSession = () => {
   useEffect(() => {
     if (!session) return;
 
-    // Initialize socket connection
-    socketRef.current = io(import.meta.env.VITE_API_URL || "http://localhost:5000");
+    console.log("Initializing video session for room:", roomId);
+
+    // Initialize socket connection - connect to backend server directly
+    const socketUrl = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace('/api', '') 
+      : "http://localhost:5000";
+    
+    console.log("Connecting to socket:", socketUrl);
+    socketRef.current = io(socketUrl);
+
+    socketRef.current.on("connect", () => {
+      console.log("Socket connected:", socketRef.current.id);
+    });
 
     // Get user media
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
+        console.log("Got user media stream");
         userStream.current = stream;
         if (userVideo.current) {
           userVideo.current.srcObject = stream;
         }
 
-        // Join room
-        socketRef.current.emit("join-room", roomId, session._id);
+        // Join room with user ID
+        const userId = session._id;
+        console.log("Joining room:", roomId, "with userId:", userId);
+        socketRef.current.emit("join-room", roomId, userId);
 
         // Handle user connected
-        socketRef.current.on("user-connected", (userId) => {
+        socketRef.current.on("user-connected", (connectedUserId) => {
+          console.log("User connected:", connectedUserId);
           setConnected(true);
-          callPeer(userId, stream);
+          callPeer(connectedUserId, stream);
         });
 
         // Handle receiving call
         socketRef.current.on("offer", (offer) => {
+          console.log("Received offer");
+          setConnected(true);
           answerCall(offer, stream);
         });
 
         // Handle answer
         socketRef.current.on("answer", (answer) => {
-          peerRef.current.signal(answer);
+          console.log("Received answer");
+          if (peerRef.current) {
+            peerRef.current.signal(answer);
+          }
         });
 
         // Handle ICE candidate
         socketRef.current.on("ice-candidate", (candidate) => {
-          peerRef.current.signal(candidate);
+          console.log("Received ICE candidate");
+          if (peerRef.current) {
+            peerRef.current.signal(candidate);
+          }
         });
 
         // Handle chat messages
@@ -83,7 +122,8 @@ const VideoSession = () => {
         });
 
         // Handle user disconnected
-        socketRef.current.on("user-disconnected", () => {
+        socketRef.current.on("user-disconnected", (userId) => {
+          console.log("User disconnected:", userId);
           setConnected(false);
           if (partnerVideo.current) {
             partnerVideo.current.srcObject = null;
@@ -95,51 +135,92 @@ const VideoSession = () => {
         alert("Please allow camera and microphone access");
       });
 
+    // Handle browser close/refresh - warn user
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = "Are you sure you want to leave? The session will end.";
+      return e.returnValue;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
+      console.log("Cleaning up video session");
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
       if (userStream.current) {
         userStream.current.getTracks().forEach((track) => track.stop());
       }
+      if (peerRef.current) {
+        peerRef.current.destroy();
+      }
     };
   }, [session, roomId]);
 
   const callPeer = (userId, stream) => {
-    const peer = new Peer({
+    console.log("Calling peer:", userId);
+    const peer = new SimplePeer({
       initiator: true,
-      trickle: false,
+      trickle: true,
       stream,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+      }
     });
 
     peer.on("signal", (data) => {
+      console.log("Sending offer");
       socketRef.current.emit("offer", roomId, data);
     });
 
     peer.on("stream", (partnerStream) => {
+      console.log("Received partner stream");
       if (partnerVideo.current) {
         partnerVideo.current.srcObject = partnerStream;
       }
+    });
+
+    peer.on("error", (err) => {
+      console.error("Peer error:", err);
     });
 
     peerRef.current = peer;
   };
 
   const answerCall = (offer, stream) => {
-    const peer = new Peer({
+    console.log("Answering call");
+    const peer = new SimplePeer({
       initiator: false,
-      trickle: false,
+      trickle: true,
       stream,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+      }
     });
 
     peer.on("signal", (data) => {
+      console.log("Sending answer");
       socketRef.current.emit("answer", roomId, data);
     });
 
     peer.on("stream", (partnerStream) => {
+      console.log("Received partner stream");
       if (partnerVideo.current) {
         partnerVideo.current.srcObject = partnerStream;
       }
+    });
+
+    peer.on("error", (err) => {
+      console.error("Peer error:", err);
     });
 
     peer.signal(offer);
@@ -175,14 +256,47 @@ const VideoSession = () => {
     }
   };
 
-  const endCall = () => {
-    if (userStream.current) {
-      userStream.current.getTracks().forEach((track) => track.stop());
+  const endCall = async () => {
+    try {
+      // Mark session as completed in backend
+      await api.patch(`/sessions/${session._id}/status`, { status: 'completed' });
+      
+      // Mark session as ended in localStorage to prevent rejoin
+      localStorage.setItem(`session_ended_${roomId}`, 'true');
+    } catch (error) {
+      console.error("Error updating session status:", error);
     }
+    
+    // Stop all media tracks
+    if (userStream.current) {
+      userStream.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+    }
+    
+    // Close peer connection
+    if (peerRef.current) {
+      peerRef.current.destroy();
+    }
+    
+    // Disconnect socket
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
-    navigate("/");
+    
+    // Determine user role and navigate to appropriate page
+    if (session) {
+      const currentUser = JSON.parse(localStorage.getItem('user'));
+      const isMentor = currentUser && session.mentor._id === currentUser._id;
+      
+      if (isMentor) {
+        navigate("/mentor/sessions");
+      } else {
+        navigate("/learner/requests");
+      }
+    } else {
+      navigate("/");
+    }
   };
 
   if (loading) {
