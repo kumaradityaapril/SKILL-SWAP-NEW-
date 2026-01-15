@@ -10,6 +10,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import MentorDashboard from "./pages/MentorDashboard";
 import LearnerDashboard from "./pages/LearnerDashboard";
 import Home from "./pages/Home";
+import VideoSession from "./pages/VideoSession";
 
 function App() {
   return (
@@ -32,6 +33,9 @@ function App() {
         {/* Requests */}
         <Route path="/mentor/requests" element={<MentorRequests />} />
         <Route path="/learner/requests" element={<LearnerRequests />} />
+
+        {/* Video Session */}
+        <Route path="/session/:roomId" element={<VideoSession />} />
 
         {/* Dashboards */}
         <Route

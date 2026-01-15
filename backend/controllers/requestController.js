@@ -38,6 +38,8 @@ export const createRequest = async (req, res) => {
       learner: req.user._id,
       mentor: skill.mentor._id,
       message,
+      mentorRead: false, // New request is unread for mentor
+      learnerRead: true, // Learner created it
     });
 
     res.status(201).json(request);
@@ -70,18 +72,22 @@ export const updateRequestStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    const request = await Request.findById(id);
+    const request = await Request.findById(id)
+      .populate("skill")
+      .populate("learner", "name email")
+      .populate("mentor", "name email");
 
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
 
     // Ensure only mentor can update their requests
-    if (request.mentor.toString() !== req.user._id.toString()) {
+    if (request.mentor._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
     request.status = status;
+    request.learnerRead = false; // Mark as unread for learner when status changes
     await request.save();
 
     res.json(request);
@@ -103,3 +109,51 @@ export const getLearnerRequests = async (req, res) => {
   }
 };
 
+
+/**
+ * Get unread notification count
+ */
+export const getUnreadCount = async (req, res) => {
+  try {
+    let count = 0;
+    
+    if (req.user.role === "mentor") {
+      count = await Request.countDocuments({
+        mentor: req.user._id,
+        mentorRead: false,
+      });
+    } else {
+      count = await Request.countDocuments({
+        learner: req.user._id,
+        learnerRead: false,
+      });
+    }
+    
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Mark notifications as read
+ */
+export const markAsRead = async (req, res) => {
+  try {
+    if (req.user.role === "mentor") {
+      await Request.updateMany(
+        { mentor: req.user._id, mentorRead: false },
+        { mentorRead: true }
+      );
+    } else {
+      await Request.updateMany(
+        { learner: req.user._id, learnerRead: false },
+        { learnerRead: true }
+      );
+    }
+    
+    res.json({ message: "Notifications marked as read" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
