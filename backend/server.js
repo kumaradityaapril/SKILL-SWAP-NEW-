@@ -2,6 +2,7 @@ import "./config/env.js"; // 👈 MUST BE FIRST LINE (no exceptions)
 
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { socketCorsOptions } from "./config/cors.js";
 import connectDB from "./config/db.js";
 import app from "./app.js";
 
@@ -12,12 +13,9 @@ const PORT = process.env.PORT || 5000;
 // Create HTTP server
 const httpServer = createServer(app);
 
-// Setup Socket.IO
+// Setup Socket.IO with CORS configuration
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST"],
-  },
+  cors: socketCorsOptions,
 });
 
 // WebSocket connection handling

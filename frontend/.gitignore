@@ -7,10 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
-*.local
+
+# Environment variables (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# BUT allow .env.example (template without secrets)
+!.env.example
 
 # Editor directories and files
 .vscode/*
