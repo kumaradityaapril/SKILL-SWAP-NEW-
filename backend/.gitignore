@@ -1,2 +1,26 @@
+# Environment variables (contains secrets)
 .env
+.env.local
+.env.*.local
+
+# BUT allow .env.example (template without secrets)
+!.env.example
+
+# Dependencies
 node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
