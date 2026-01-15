@@ -1,27 +1,51 @@
 import { Link } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
+import api from "../services/api";
+import Navbar from "../components/Navbar";
 
 const LearnerDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const [stats, setStats] = useState({
+    activeRequests: 0,
+    skillsLearning: 0,
+    completed: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Fetch learner's requests
+        const requestsRes = await api.get("/requests/learner");
+        
+        const pendingCount = requestsRes.data.filter(
+          (req) => req.status === "pending"
+        ).length;
+        
+        const acceptedCount = requestsRes.data.filter(
+          (req) => req.status === "accepted"
+        ).length;
+
+        setStats({
+          activeRequests: pendingCount,
+          skillsLearning: acceptedCount,
+          completed: 0, // You can add completed sessions logic later
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Learner Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome back, {user?.name}!</p>
-          </div>
-          <button
-            onClick={logout}
-            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
@@ -31,7 +55,7 @@ const LearnerDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-indigo-100 text-sm mb-1">Active Requests</p>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{loading ? "..." : stats.activeRequests}</p>
               </div>
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +69,7 @@ const LearnerDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm mb-1">Skills Learning</p>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{loading ? "..." : stats.skillsLearning}</p>
               </div>
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +83,7 @@ const LearnerDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-pink-100 text-sm mb-1">Completed</p>
-                <p className="text-3xl font-bold">0</p>
+                <p className="text-3xl font-bold">{loading ? "..." : stats.completed}</p>
               </div>
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,15 +138,67 @@ const LearnerDashboard = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Recent Activity</h2>
           <div className="bg-white rounded-2xl shadow-md p-8">
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-gray-600">Loading activity...</p>
               </div>
-              <p className="text-gray-500 text-lg">No recent activity</p>
-              <p className="text-gray-400 text-sm mt-2">Start exploring skills to begin your learning journey!</p>
-            </div>
+            ) : stats.activeRequests === 0 && stats.skillsLearning === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-lg">No recent activity</p>
+                <p className="text-gray-400 text-sm mt-2">Start exploring skills to begin your learning journey!</p>
+                <Link
+                  to="/skills"
+                  className="inline-block mt-6 px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+                >
+                  Explore Skills
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {stats.activeRequests > 0 && (
+                  <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800">{stats.activeRequests} Pending Request{stats.activeRequests !== 1 ? 's' : ''}</p>
+                        <p className="text-sm text-gray-600">Waiting for mentor response</p>
+                      </div>
+                    </div>
+                    <Link to="/learner/requests" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+                      View →
+                    </Link>
+                  </div>
+                )}
+                {stats.skillsLearning > 0 && (
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800">{stats.skillsLearning} Active Learning Session{stats.skillsLearning !== 1 ? 's' : ''}</p>
+                        <p className="text-sm text-gray-600">Currently learning</p>
+                      </div>
+                    </div>
+                    <Link to="/learner/requests" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+                      View →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>

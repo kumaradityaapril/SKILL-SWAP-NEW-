@@ -13,14 +13,56 @@ const Register = () => {
   const [role, setRole] = useState("learner");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    if (value && !validateEmail(value)) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    
+    if (value && value.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+    } else {
+      setPasswordError("");
+    }
+  };
 
   const submitHandler = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Final validation before submit
+    if (!validateEmail(email)) {
+      setError("Please provide a valid email address");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const registerRes = await api.post("/auth/register", {
+      await api.post("/auth/register", {
         name,
         email,
         password,
@@ -102,22 +144,37 @@ const Register = () => {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
+                  emailError
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-indigo-500"
+                }`}
               />
+              {emailError && (
+                <p className="text-red-600 text-sm mt-1">{emailError}</p>
+              )}
             </div>
 
             <div className="animate-fadeInUp delay-500">
               <label className="block text-gray-700 font-medium mb-2">Password</label>
               <input
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter your password (min. 6 characters)"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                minLength={6}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
+                  passwordError
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-indigo-500"
+                }`}
               />
+              {passwordError && (
+                <p className="text-red-600 text-sm mt-1">{passwordError}</p>
+              )}
             </div>
 
             <div className="animate-fadeInUp delay-600">

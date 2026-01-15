@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import skillRoutes from "./routes/skillPostRoutes.js";
 import requestRoutes from "./routes/requestRoutes.js";
+import sessionRoutes from "./routes/sessionRoutes.js";
 
 const app = express();
 
@@ -12,6 +13,6 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/requests", requestRoutes);
-
+app.use("/api/sessions", sessionRoutes);
 
 export default app;

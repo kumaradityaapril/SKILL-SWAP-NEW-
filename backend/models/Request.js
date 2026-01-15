@@ -25,6 +25,15 @@ const requestSchema = new mongoose.Schema(
     message: {
       type: String,
     },
+    // Notification tracking
+    mentorRead: {
+      type: Boolean,
+      default: false,
+    },
+    learnerRead: {
+      type: Boolean,
+      default: true, // Learner created it, so they've "read" it
+    },
   },
   { timestamps: true }
 );
