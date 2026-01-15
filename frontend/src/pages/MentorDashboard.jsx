@@ -102,7 +102,7 @@ const MentorDashboard = () => {
         {/* Quick Actions */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Actions</h2>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-3">
             <Link
               to="/create-skill"
               className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-indigo-500 group"
@@ -133,6 +133,23 @@ const MentorDashboard = () => {
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-gray-800 mb-2">View Requests</h3>
                   <p className="text-gray-600">Review and manage incoming learning requests</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/mentor/sessions"
+              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-green-500 group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-600 transition">
+                  <svg className="w-7 h-7 text-green-600 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">My Sessions</h3>
+                  <p className="text-gray-600">View and join scheduled mentoring sessions</p>
                 </div>
               </div>
             </Link>

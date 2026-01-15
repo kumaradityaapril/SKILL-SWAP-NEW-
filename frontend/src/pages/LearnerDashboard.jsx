@@ -27,10 +27,25 @@ const LearnerDashboard = () => {
           (req) => req.status === "accepted"
         ).length;
 
+        // Fetch learner's sessions to count completed ones
+        let completedCount = 0;
+        try {
+          const sessionsRes = await api.get("/sessions/learner");
+          const now = new Date();
+          
+          completedCount = sessionsRes.data.filter((session) => {
+            const sessionDate = new Date(session.scheduledDate);
+            const sessionEndTime = new Date(sessionDate.getTime() + session.duration * 60000);
+            return now > sessionEndTime; // Session has ended
+          }).length;
+        } catch (error) {
+          console.error("Error fetching sessions:", error);
+        }
+
         setStats({
           activeRequests: pendingCount,
           skillsLearning: acceptedCount,
-          completed: 0, // You can add completed sessions logic later
+          completed: completedCount,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);

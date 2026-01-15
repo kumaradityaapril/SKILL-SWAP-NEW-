@@ -5,7 +5,9 @@ import Skills from "./pages/Skills";
 import CreateSkill from "./pages/CreateSkill";
 import SkillDetail from "./pages/SkillDetail";
 import MentorRequests from "./pages/MentorRequests";
+import MentorSessions from "./pages/MentorSessions";
 import LearnerRequests from "./pages/LearnerRequests";
+import BookSession from "./pages/BookSession";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import MentorDashboard from "./pages/MentorDashboard";
 import LearnerDashboard from "./pages/LearnerDashboard";
@@ -32,7 +34,11 @@ function App() {
 
         {/* Requests */}
         <Route path="/mentor/requests" element={<MentorRequests />} />
+        <Route path="/mentor/sessions" element={<MentorSessions />} />
         <Route path="/learner/requests" element={<LearnerRequests />} />
+
+        {/* Book Session */}
+        <Route path="/session/book/:requestId" element={<BookSession />} />
 
         {/* Video Session */}
         <Route path="/session/:roomId" element={<VideoSession />} />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import SessionButton from "../components/SessionButton";
 
 const MentorRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -216,12 +217,7 @@ const MentorRequests = () => {
 
                   {/* Status Message for accepted/rejected */}
                   {req.status === "accepted" && (
-                    <div className="flex items-center gap-2 text-green-600 font-semibold">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Request Accepted
-                    </div>
+                    <SessionButton requestId={req._id} userRole="mentor" />
                   )}
 
                   {req.status === "rejected" && (

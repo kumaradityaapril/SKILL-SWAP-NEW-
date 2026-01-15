@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import SessionButton from "../components/SessionButton";
 
 const LearnerRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -185,9 +186,12 @@ const LearnerRequests = () => {
                   </div>
                   
                   {req.status === "accepted" && (
-                    <span className="text-sm text-green-600 font-medium">
-                      🎉 Request Accepted!
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-green-600 font-medium">
+                        🎉 Accepted!
+                      </span>
+                      <SessionButton requestId={req._id} userRole="learner" />
+                    </div>
                   )}
                 </div>
               </div>
